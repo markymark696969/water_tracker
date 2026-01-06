@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Water Tracker (Auto Reset)</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e3f2fd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .app {
+      position: relative;
+      width: 320px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .reset-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff5252;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .total {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .reset-time {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    /* Glass */
+    .glass {
+      position: relative;
+      width: 120px;
+      height: 220px;
+      margin: 15px auto;
+      border: 4px solid #555;
+      border-radius: 0 0 20px 20px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    /* Water */
+    .water {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(#4dabf7, #1c7ed6);
+      transition: height 0.6s ease;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    .buttons button {
+      flex: 1;
+      margin: 0 5px;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #4dabf7;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .buttons button:hover {
+      background: #339af0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <button class="reset-btn" onclick="manualReset()">Reset</button>
+
+    <div class="total">
+      Total: <span id="totalAmount">0</span> ml
+    </div>
+
+    <div class="reset-time">
+      Last reset: <span id="lastReset">Today at midnight</span>
+    </div>
+
+    <div class="glass">
+      <div class="water" id="water"></div>
+    </div>
+
+    <div class="buttons">
+      <button onclick="addWater(100)">100 ml</button>
+      <button onclick="addWater(250)">250 ml</button>
+      <button onclick="addWater(500)">500 ml</button>
+    </div>
+  </div>
+
+  <script>
+    const maxCapacity = 4000;
+    const waterEl = document.getElementById("water");
+    const totalEl = document.getElementById("totalAmount");
+    const resetEl = document.getElementById("lastReset");
+
+    let total = 0;
+
+    function todayKey() {
+      return new Date().toISOString().split("T")[0];
+    }
+
+    function addWater(amount) {
+      total += amount;
+      if (total > maxCapacity) total = maxCapacity;
+
+      localStorage.setItem("waterTotal", total);
+      updateUI();
+    }
+
+    function manualReset() {
+      resetWater(new Date());
+    }
+
+    function resetWater(dateObj) {
+      total = 0;
+      const time = dateObj.toLocaleString();
+
+      localStorage.setItem("waterTotal", total);
+      localStorage.setItem("lastResetTime", time);
+      localStorage.setItem("lastResetDate", todayKey());
+
+      resetEl.textContent = time;
+      updateUI();
+    }
+
+    function updateUI() {
+      totalEl.textContent = total;
+      waterEl.style.height = (total / maxCapacity) * 100 + "%";
+    }
+
+    function initialize() {
+      const savedDate = localStorage.getItem("lastResetDate");
+      const today = todayKey();
+
+      if (savedDate !== today) {
+        // Auto reset at midnight
+        resetWater(new Date());
+      } else {
+        total = parseInt(localStorage.getItem("waterTotal") || "0", 10);
+        resetEl.textContent =
+          localStorage.getItem("lastResetTime") || "Today at midnight";
+      }
+
+      updateUI();
+    }
+
+    initialize();
+  </script>
+
+</body>
+</html>
