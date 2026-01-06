@@ -1,2 +1,1 @@
-# water_tracker
-water intake tracker
+index.html
